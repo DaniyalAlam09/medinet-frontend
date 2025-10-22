@@ -38,7 +38,7 @@ const ApprovalStatus: React.FC<ApprovalStatusProps> = ({ user, onRefresh }) => {
             };
         }
 
-        if (user.role === 'hospital_admin') {
+        if (user.role === 'hospital') {
             return {
                 status: 'pending',
                 title: 'Hospital Registration Pending',
@@ -107,7 +107,7 @@ const ApprovalStatus: React.FC<ApprovalStatusProps> = ({ user, onRefresh }) => {
                         {statusInfo.message}
                     </Alert>
 
-                    {user.role === 'hospital_admin' && (
+                    {user.role === 'hospital' && (
                         <Box sx={{ mb: 3 }}>
                             <Typography variant="body2" color="text.secondary" gutterBottom>
                                 What happens next?

@@ -17,7 +17,13 @@ import {
     FormHelperText,
     Divider,
     Autocomplete,
+    InputAdornment,
+    IconButton,
 } from '@mui/material';
+import {
+    Visibility,
+    VisibilityOff,
+} from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -56,7 +62,7 @@ const schema = yup.object({
         .required('Confirm password is required'),
     role: yup
         .string()
-        .oneOf(['super_admin', 'hospital_admin', 'doctor', 'patient'], 'Invalid role selected')
+        .oneOf(['super_admin', 'hospital', 'doctor', 'patient'], 'Invalid role selected')
         .required('Role is required'),
     phone: yup
         .string()
@@ -70,7 +76,7 @@ const schema = yup.object({
         .string()
         .oneOf(['male', 'female', 'other'], 'Invalid gender selected')
         .when('role', {
-            is: (role: string) => role === 'hospital_admin',
+            is: (role: string) => role === 'hospital',
             then: (schema) => schema.optional(),
             otherwise: (schema) => schema.optional(),
         }),
@@ -84,8 +90,8 @@ const schema = yup.object({
     hospitalId: yup
         .string()
         .when('role', {
-            is: (role: string) => ['hospital_admin', 'doctor'].includes(role),
-            then: (schema) => schema.required('Hospital ID is required for this role'),
+            is: (role: string) => role === 'doctor',
+            then: (schema) => schema.required('Hospital ID is required for doctors'),
             otherwise: (schema) => schema.optional(),
         }),
     licenseNumber: yup
@@ -127,9 +133,19 @@ const RegisterPage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [hospitals, setHospitals] = useState<Hospital[]>([]);
     const [loadingHospitals, setLoadingHospitals] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const { register: registerUser } = useAuth();
     const navigate = useNavigate();
+
+    const handleTogglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
+
+    const handleToggleConfirmPasswordVisibility = () => {
+        setShowConfirmPassword(!showConfirmPassword);
+    };
 
     const {
         register,
@@ -146,7 +162,7 @@ const RegisterPage: React.FC = () => {
     });
 
     const watchedRole = watch('role');
-
+    console.log("errors", errors)
     // Load hospitals when component mounts
     useEffect(() => {
         const loadHospitals = async () => {
@@ -197,7 +213,7 @@ const RegisterPage: React.FC = () => {
     const roles: { value: UserRole; label: string }[] = [
         { value: 'patient', label: 'Patient' },
         { value: 'doctor', label: 'Doctor' },
-        { value: 'hospital_admin', label: 'Hospital Administrator' },
+        { value: 'hospital', label: 'Hospital Administrator' },
     ];
 
     const genders = [
@@ -232,7 +248,7 @@ const RegisterPage: React.FC = () => {
                         </Alert>
                     )}
 
-                    <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
+                    <Box component="form" noValidate>
                         <Grid container spacing={2}>
                             {/* Basic Information */}
                             <Grid item xs={12}>
@@ -431,8 +447,8 @@ const RegisterPage: React.FC = () => {
                                 />
                             </Grid>
 
-                            {/* Hospital Information - Required for hospital_admin and doctor */}
-                            {['hospital_admin', 'doctor'].includes(watchedRole) && (
+                            {/* Hospital Information - Required for doctor only */}
+                            {watchedRole === 'doctor' && (
                                 <>
                                     <Grid item xs={12}>
                                         <Divider sx={{ my: 2 }} />
@@ -481,6 +497,21 @@ const RegisterPage: React.FC = () => {
                                                 />
                                             )}
                                         />
+                                    </Grid>
+                                </>
+                            )}
+
+                            {/* Hospital Admin Information */}
+                            {watchedRole === 'hospital' && (
+                                <>
+                                    <Grid item xs={12}>
+                                        <Divider sx={{ my: 2 }} />
+                                        <Typography variant="h6" gutterBottom>
+                                            Administrator Information
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                            You will be linked to your hospital after registration and approval.
+                                        </Typography>
                                     </Grid>
                                 </>
                             )}
@@ -551,11 +582,24 @@ const RegisterPage: React.FC = () => {
                                     fullWidth
                                     name="password"
                                     label="Password"
-                                    type="password"
+                                    type={showPassword ? 'text' : 'password'}
                                     id="password"
                                     autoComplete="new-password"
                                     error={!!errors.password}
                                     helperText={errors.password?.message || "Must contain uppercase, lowercase, and number"}
+                                    InputProps={{
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton
+                                                    aria-label="toggle password visibility"
+                                                    onClick={handleTogglePasswordVisibility}
+                                                    edge="end"
+                                                >
+                                                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        ),
+                                    }}
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6}>
@@ -565,20 +609,34 @@ const RegisterPage: React.FC = () => {
                                     fullWidth
                                     name="confirmPassword"
                                     label="Confirm Password"
-                                    type="password"
+                                    type={showConfirmPassword ? 'text' : 'password'}
                                     id="confirmPassword"
                                     autoComplete="new-password"
                                     error={!!errors.confirmPassword}
                                     helperText={errors.confirmPassword?.message}
+                                    InputProps={{
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton
+                                                    aria-label="toggle confirm password visibility"
+                                                    onClick={handleToggleConfirmPasswordVisibility}
+                                                    edge="end"
+                                                >
+                                                    {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        ),
+                                    }}
                                 />
                             </Grid>
                         </Grid>
                         <Button
-                            type="submit"
+                            type="button"
                             fullWidth
                             variant="contained"
                             sx={{ mt: 3, mb: 2 }}
                             disabled={isLoading}
+                            onClick={handleSubmit(onSubmit)}
                         >
                             {isLoading ? <CircularProgress size={24} /> : 'Create Account'}
                         </Button>

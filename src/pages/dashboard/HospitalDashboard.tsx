@@ -15,11 +15,13 @@ import {
 import {
     Add as AddIcon,
     Edit as EditIcon,
+    Delete as DeleteIcon,
     Visibility as ViewIcon,
-    Schedule as ScheduleIcon,
+    People as PeopleIcon,
+    LocalHospital as HospitalIcon,
     Assignment as AssignmentIcon,
-    CalendarToday as CalendarIcon,
-    Description as DescriptionIcon,
+    CheckCircle as CheckCircleIcon,
+    MedicalServices as MedicalServicesIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../hooks/useAuth';
 import { useDashboardData } from '../../hooks/useDashboardData';
@@ -33,18 +35,18 @@ import {
 } from '../../components/dashboard';
 import { formatStatus, formatAvatar, formatDateTime } from '../../components/dashboard/DataTable';
 
-const PatientDashboard: React.FC = () => {
+const HospitalDashboard: React.FC = () => {
     const { user } = useAuth();
-    const { data, loading, error } = useDashboardData('patient');
+    const { data, loading, error } = useDashboardData('hospital');
     const [tabValue, setTabValue] = useState(0);
     const [openDialog, setOpenDialog] = useState(false);
-    const [dialogType, setDialogType] = useState<'appointment' | 'record' | 'referral'>('appointment');
+    const [dialogType, setDialogType] = useState<'doctor' | 'referral' | 'patient'>('doctor');
 
     const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
         setTabValue(newValue);
     };
 
-    const handleOpenDialog = (type: 'appointment' | 'record' | 'referral') => {
+    const handleOpenDialog = (type: 'doctor' | 'referral' | 'patient') => {
         setDialogType(type);
         setOpenDialog(true);
     };
@@ -53,24 +55,29 @@ const PatientDashboard: React.FC = () => {
         setOpenDialog(false);
     };
 
-    const handleViewAppointment = (appointment: any) => {
-        console.log('View appointment:', appointment);
-        // Implement view appointment logic
+    const handleViewDoctor = (doctor: any) => {
+        console.log('View doctor:', doctor);
+        // Implement view doctor logic
     };
 
-    const handleEditAppointment = (appointment: any) => {
-        console.log('Edit appointment:', appointment);
-        // Implement edit appointment logic
+    const handleEditDoctor = (doctor: any) => {
+        console.log('Edit doctor:', doctor);
+        // Implement edit doctor logic
     };
 
-    const handleViewRecord = (record: any) => {
-        console.log('View record:', record);
-        // Implement view record logic
+    const handleDeleteDoctor = (doctor: any) => {
+        console.log('Delete doctor:', doctor);
+        // Implement delete doctor logic
     };
 
     const handleViewReferral = (referral: any) => {
         console.log('View referral:', referral);
         // Implement view referral logic
+    };
+
+    const handleEditReferral = (referral: any) => {
+        console.log('Edit referral:', referral);
+        // Implement edit referral logic
     };
 
     if (loading) {
@@ -109,166 +116,129 @@ const PatientDashboard: React.FC = () => {
     // Prepare stats for StatsGrid
     const statsData = [
         {
-            title: 'Next Appointment',
-            value: data.stats?.nextAppointment ? formatDateTime(data.stats.nextAppointment) : 'Not scheduled',
-            subtitle: `with ${data.stats?.primaryDoctor || 'Dr. Unknown'}`,
-            icon: <ScheduleIcon />,
-            color: 'primary' as const
+            title: 'Doctors',
+            value: data.stats?.totalDoctors || 0,
+            subtitle: `${data.doctors?.filter((d: any) => d.status === 'Active').length || 0} active`,
+            icon: <MedicalServicesIcon />,
+            color: 'primary' as const,
+            trend: {
+                value: data.stats?.monthlyGrowth?.doctors || 0,
+                label: 'vs last month',
+                isPositive: (data.stats?.monthlyGrowth?.doctors || 0) >= 0
+            }
         },
         {
-            title: 'Upcoming',
-            value: data.stats?.upcomingAppointments || 0,
-            subtitle: 'appointments scheduled',
-            icon: <CalendarIcon />,
-            color: 'primary' as const
+            title: 'Patients',
+            value: data.stats?.totalPatients || 0,
+            subtitle: `+${data.stats?.todayAppointments || 0} today`,
+            icon: <PeopleIcon />,
+            color: 'primary' as const,
+            trend: {
+                value: data.stats?.monthlyGrowth?.patients || 0,
+                label: 'vs last month',
+                isPositive: (data.stats?.monthlyGrowth?.patients || 0) >= 0
+            }
         },
         {
             title: 'Referrals',
-            value: data.stats?.completedReferrals || 0,
+            value: data.stats?.totalReferrals || 0,
             subtitle: `${data.stats?.pendingReferrals || 0} pending`,
             icon: <AssignmentIcon />,
-            color: 'primary' as const
+            color: 'primary' as const,
+            trend: {
+                value: data.stats?.monthlyGrowth?.referrals || 0,
+                label: 'vs last month',
+                isPositive: (data.stats?.monthlyGrowth?.referrals || 0) >= 0
+            }
         },
         {
-            title: 'Records',
-            value: data.stats?.medicalRecords || 0,
-            subtitle: 'medical records',
-            icon: <DescriptionIcon />,
-            color: 'primary' as const
+            title: 'System Status',
+            value: data.stats?.systemStatus || 'Unknown',
+            subtitle: 'All systems operational',
+            icon: <HospitalIcon />,
+            color: (data.stats?.systemStatus === 'Operational' ? 'success' : 'error') as 'success' | 'error',
+            chip: {
+                label: data.stats?.systemStatus || 'Unknown',
+                color: (data.stats?.systemStatus === 'Operational' ? 'success' : 'error') as 'success' | 'error',
+                icon: <CheckCircleIcon />
+            }
         }
     ];
 
-    // Prepare appointment table columns
-    const appointmentColumns: TableColumn[] = [
+    // Prepare doctor table columns
+    const doctorColumns: TableColumn[] = [
         {
-            id: 'dateTime',
-            label: 'Date & Time',
-            minWidth: 150,
-            format: (value, _row) => (
-                <Box>
-                    <Typography variant="subtitle2">{formatDateTime(value)}</Typography>
-                </Box>
-            )
-        },
-        {
-            id: 'doctor',
+            id: 'name',
             label: 'Doctor',
             minWidth: 200,
-            format: (value, _row) => formatAvatar(value, _row.doctorImage)
+            format: (_value, row) => formatAvatar(`Dr. ${row.firstName} ${row.lastName}`, row.profileImage)
         },
         {
-            id: 'specialty',
-            label: 'Specialty',
-            minWidth: 120,
+            id: 'specialization',
+            label: 'Specialization',
+            minWidth: 150,
             format: (value) => <Chip label={value} size="small" />
         },
         {
-            id: 'type',
-            label: 'Type',
-            minWidth: 120,
-            format: (value) => <Chip label={value} size="small" />
+            id: 'licenseNumber',
+            label: 'License',
+            minWidth: 120
         },
         {
             id: 'status',
             label: 'Status',
             minWidth: 100,
             format: (value) => formatStatus(value, {
-                'Scheduled': 'success',
-                'Completed': 'info',
-                'Cancelled': 'error'
+                'Active': 'success',
+                'On Leave': 'error',
+                'Pending': 'warning'
             })
         },
         {
-            id: 'location',
-            label: 'Location',
-            minWidth: 150
+            id: 'yearsOfExperience',
+            label: 'Experience',
+            minWidth: 100,
+            format: (value) => `${value} years`
+        },
+        {
+            id: 'email',
+            label: 'Email',
+            minWidth: 200
         }
     ];
 
-    // Prepare appointment table actions
-    const appointmentActions: TableAction[] = [
+    // Prepare doctor table actions
+    const doctorActions: TableAction[] = [
         {
             icon: <ViewIcon />,
-            onClick: handleViewAppointment,
-            tooltip: 'View Appointment'
+            onClick: handleViewDoctor,
+            tooltip: 'View Doctor'
         },
         {
             icon: <EditIcon />,
-            onClick: handleEditAppointment,
-            tooltip: 'Edit Appointment'
-        }
-    ];
-
-    // Prepare medical record table columns
-    const recordColumns: TableColumn[] = [
-        {
-            id: 'date',
-            label: 'Date',
-            minWidth: 120,
-            format: (value) => formatDateTime(value)
+            onClick: handleEditDoctor,
+            tooltip: 'Edit Doctor'
         },
         {
-            id: 'doctor',
-            label: 'Doctor',
-            minWidth: 200,
-            format: (value, _row) => formatAvatar(value, _row.doctorImage)
-        },
-        {
-            id: 'specialty',
-            label: 'Specialty',
-            minWidth: 120,
-            format: (value) => <Chip label={value} size="small" />
-        },
-        {
-            id: 'diagnosis',
-            label: 'Diagnosis',
-            minWidth: 150
-        },
-        {
-            id: 'treatment',
-            label: 'Treatment',
-            minWidth: 200
-        },
-        {
-            id: 'attachments',
-            label: 'Attachments',
-            minWidth: 150,
-            format: (value) => (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {value?.map((attachment: string, index: number) => (
-                        <Chip
-                            key={index}
-                            label={attachment}
-                            size="small"
-                            variant="outlined"
-                        />
-                    ))}
-                </Box>
-            )
-        }
-    ];
-
-    // Prepare medical record table actions
-    const recordActions: TableAction[] = [
-        {
-            icon: <ViewIcon />,
-            onClick: handleViewRecord,
-            tooltip: 'View Record'
+            icon: <DeleteIcon />,
+            onClick: handleDeleteDoctor,
+            color: 'error',
+            tooltip: 'Delete Doctor'
         }
     ];
 
     // Prepare referral table columns
     const referralColumns: TableColumn[] = [
         {
-            id: 'createdAt',
-            label: 'Date',
-            minWidth: 120,
-            format: (value) => formatDateTime(value)
+            id: 'patientId',
+            label: 'Patient',
+            minWidth: 150,
+            format: (value) => value ? `${value.firstName} ${value.lastName}` : 'N/A'
         },
         {
             id: 'fromDoctor',
             label: 'From Doctor',
-            minWidth: 200,
+            minWidth: 150,
             format: (value) => value ? `Dr. ${value.firstName} ${value.lastName}` : 'N/A'
         },
         {
@@ -299,10 +269,16 @@ const PatientDashboard: React.FC = () => {
             minWidth: 100,
             format: (value) => formatStatus(value, {
                 'Completed': 'success',
-                'Approved': 'info',
                 'Pending': 'warning',
-                'Rejected': 'error'
+                'In Progress': 'info',
+                'Cancelled': 'error'
             })
+        },
+        {
+            id: 'createdAt',
+            label: 'Date',
+            minWidth: 120,
+            format: (value) => formatDateTime(value)
         }
     ];
 
@@ -312,43 +288,31 @@ const PatientDashboard: React.FC = () => {
             icon: <ViewIcon />,
             onClick: handleViewReferral,
             tooltip: 'View Referral'
+        },
+        {
+            icon: <EditIcon />,
+            onClick: handleEditReferral,
+            tooltip: 'Edit Referral'
         }
     ];
 
     // Prepare tab configurations
     const tabConfigs = [
         {
-            label: 'Appointments',
+            label: 'Doctors',
             content: (
                 <DataTable
-                    columns={appointmentColumns}
-                    data={data.appointments || []}
-                    actions={appointmentActions}
+                    columns={doctorColumns}
+                    data={data.doctors || []}
+                    actions={doctorActions}
                     loading={loading}
-                    emptyMessage="No appointments found"
+                    emptyMessage="No doctors found"
                 />
             ),
             actionButton: {
-                label: 'Book Appointment',
+                label: 'Add Doctor',
                 icon: <AddIcon />,
-                onClick: () => handleOpenDialog('appointment')
-            }
-        },
-        {
-            label: 'Medical Records',
-            content: (
-                <DataTable
-                    columns={recordColumns}
-                    data={data.records || []}
-                    actions={recordActions}
-                    loading={loading}
-                    emptyMessage="No medical records found"
-                />
-            ),
-            actionButton: {
-                label: 'Request Record',
-                icon: <AddIcon />,
-                onClick: () => handleOpenDialog('record')
+                onClick: () => handleOpenDialog('doctor')
             }
         },
         {
@@ -363,19 +327,32 @@ const PatientDashboard: React.FC = () => {
                 />
             ),
             actionButton: {
-                label: 'Request Referral',
+                label: 'Create Referral',
                 icon: <AddIcon />,
                 onClick: () => handleOpenDialog('referral')
             }
         },
         {
-            label: 'Health Summary',
+            label: 'Patients',
+            content: (
+                <Alert severity="info">
+                    Patient management features will be implemented here. This includes patient registration, medical records, and appointment scheduling.
+                </Alert>
+            ),
+            actionButton: {
+                label: 'Add Patient',
+                icon: <AddIcon />,
+                onClick: () => handleOpenDialog('patient')
+            }
+        },
+        {
+            label: 'Analytics',
             content: (
                 <Box sx={{ display: 'flex', gap: 2 }}>
                     <ActivityFeed
                         activities={data.activities || []}
                         loading={loading}
-                        title="Health Activities"
+                        title="Hospital Activities"
                         maxItems={5}
                         sx={{ flex: 1 }}
                     />
@@ -389,10 +366,10 @@ const PatientDashboard: React.FC = () => {
             {/* Header */}
             <Box sx={{ mb: 4 }}>
                 <Typography variant="h4" component="h1" gutterBottom>
-                    Patient Dashboard
+                    Hospital Admin Dashboard
                 </Typography>
                 <Typography variant="subtitle1" color="text.secondary">
-                    Welcome back, {user?.firstName} {user?.lastName} • {data.stats?.age || 0} years old, {data.stats?.gender || 'Unknown'}
+                    {data.stats?.hospitalName || 'Hospital'} • Welcome back, {user?.firstName} {user?.lastName}
                 </Typography>
             </Box>
 
@@ -414,9 +391,9 @@ const PatientDashboard: React.FC = () => {
             {/* Add/Edit Dialog */}
             <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
                 <DialogTitle>
-                    {dialogType === 'appointment' && 'Book Appointment'}
-                    {dialogType === 'record' && 'Request Medical Record'}
-                    {dialogType === 'referral' && 'Request Referral'}
+                    {dialogType === 'doctor' && 'Add New Doctor'}
+                    {dialogType === 'referral' && 'Create New Referral'}
+                    {dialogType === 'patient' && 'Add New Patient'}
                 </DialogTitle>
                 <DialogContent>
                     <Alert severity="info" sx={{ mb: 2 }}>
@@ -426,7 +403,7 @@ const PatientDashboard: React.FC = () => {
                 <DialogActions>
                     <Button onClick={handleCloseDialog}>Cancel</Button>
                     <Button variant="contained" onClick={handleCloseDialog}>
-                        Submit
+                        Save
                     </Button>
                 </DialogActions>
             </Dialog>
@@ -434,4 +411,4 @@ const PatientDashboard: React.FC = () => {
     );
 };
 
-export default PatientDashboard;
+export default HospitalDashboard;

@@ -58,7 +58,13 @@ export const hospitalApi = {
     return response.data;
   },
 
-  // Create hospital (Public registration)
+  // Register hospital (Public registration)
+  registerHospital: async (hospitalData: any) => {
+    const response = await api.post('/api/hospitals', hospitalData);
+    return response.data;
+  },
+
+  // Create hospital (Public registration) - alias for registerHospital
   createHospital: async (hospitalData: any) => {
     const response = await api.post('/api/hospitals', hospitalData);
     return response.data;

@@ -35,7 +35,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         checkAuth();
     }, []);
 
-    const login = async (credentials: LoginCredentials) => {
+    const login = async (credentials: LoginCredentials, event?: React.BaseSyntheticEvent) => {
+        if (event) {
+            event.preventDefault();
+        }
+
         try {
             setIsLoading(true);
             setError(null);
@@ -114,7 +118,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             return false;
         }
 
-        if (user.role === 'hospital_admin' && user.approvalStatus !== 'approved') {
+        if (user.role === 'hospital' && user.approvalStatus !== 'approved') {
             return true; // Always needs hospital approval
         }
 

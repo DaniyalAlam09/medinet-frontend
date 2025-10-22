@@ -26,14 +26,14 @@ const EditProfilePage: React.FC = () => {
     const [preview, setPreview] = useState<string | null>(null);
 
     const schema = useMemo(() => {
-    const base = {
+        const base = {
             firstName: yup.string().required('First name is required'),
             lastName: yup.string().required('Last name is required'),
-      phone: yup
-        .string()
-        .nullable()
-        .matches(/^\+?[1-9]\d{7,14}$/,
-          'Enter a valid international phone like +1234567890'),
+            phone: yup
+                .string()
+                .nullable()
+                .matches(/^\+?[1-9]\d{7,14}$/,
+                    'Enter a valid international phone like +1234567890'),
             dateOfBirth: yup.string().nullable(),
             gender: yup.string().oneOf(['male', 'female', 'other', '']).nullable(),
             address: yup.object().shape({
@@ -56,7 +56,7 @@ const EditProfilePage: React.FC = () => {
                     yearsOfExperience: yup.number().typeError('Must be a number').min(0).nullable(),
                     qualification: yup.string().nullable(),
                 });
-            case 'hospital_admin':
+            case 'hospital':
                 return yup.object({
                     ...base,
                     department: yup.string().nullable(),
@@ -69,13 +69,13 @@ const EditProfilePage: React.FC = () => {
                     emergencyPhone: yup.string().nullable(),
                     medicalHistory: yup.string().nullable(),
                 });
-      case 'super_admin':
+            case 'super_admin':
                 return yup.object({
                     ...base,
-          adminLevel: yup
-            .string()
-            .oneOf(['system', 'platform', 'support'], 'Select a valid admin level')
-            .nullable(),
+                    adminLevel: yup
+                        .string()
+                        .oneOf(['system', 'platform', 'support'], 'Select a valid admin level')
+                        .nullable(),
                     organization: yup.string().nullable(),
                     responsibilities: yup.string().nullable(),
                 });
@@ -154,7 +154,7 @@ const EditProfilePage: React.FC = () => {
                         </Grid>
                     </>
                 );
-            case 'hospital_admin':
+            case 'hospital':
                 return (
                     <>
                         <Grid item xs={12} md={6}>
@@ -189,18 +189,18 @@ const EditProfilePage: React.FC = () => {
                         </Grid>
                     </>
                 );
-      case 'super_admin':
-        return (
-          <>
-            <Grid item xs={12} md={6}>
-              <Controller name="adminLevel" control={control} render={({ field }) => (
-                <TextField {...field} select label="Admin Level" fullWidth>
-                  <MenuItem value="system">System</MenuItem>
-                  <MenuItem value="platform">Platform</MenuItem>
-                  <MenuItem value="support">Support</MenuItem>
-                </TextField>
-              )} />
-            </Grid>
+            case 'super_admin':
+                return (
+                    <>
+                        <Grid item xs={12} md={6}>
+                            <Controller name="adminLevel" control={control} render={({ field }) => (
+                                <TextField {...field} select label="Admin Level" fullWidth>
+                                    <MenuItem value="system">System</MenuItem>
+                                    <MenuItem value="platform">Platform</MenuItem>
+                                    <MenuItem value="support">Support</MenuItem>
+                                </TextField>
+                            )} />
+                        </Grid>
                         <Grid item xs={12} md={6}>
                             <Controller name="organization" control={control} render={({ field }) => (
                                 <TextField {...field} label="Organization" fullWidth />
@@ -254,21 +254,21 @@ const EditProfilePage: React.FC = () => {
                                 <Grid item xs={12} md={6}>
                                     <TextField value={user.email} label="Email" fullWidth disabled />
                                 </Grid>
-                <Grid item xs={12} md={6}>
-                  <Controller name="phone" control={control} render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label="Phone"
-                      fullWidth
-                      onChange={(e) => {
-                        // Keep only + and digits; no spaces or symbols
-                        const raw = e.target.value.replace(/[^+\d]/g, '');
-                        field.onChange(raw);
-                      }}
-                      placeholder="+1234567890"
-                    />
-                  )} />
-                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <Controller name="phone" control={control} render={({ field }) => (
+                                        <TextField
+                                            {...field}
+                                            label="Phone"
+                                            fullWidth
+                                            onChange={(e) => {
+                                                // Keep only + and digits; no spaces or symbols
+                                                const raw = e.target.value.replace(/[^+\d]/g, '');
+                                                field.onChange(raw);
+                                            }}
+                                            placeholder="+1234567890"
+                                        />
+                                    )} />
+                                </Grid>
                                 <Grid item xs={12} md={6}>
                                     <Controller name="dateOfBirth" control={control} render={({ field }) => (
                                         <TextField {...field} type="date" label="Date of Birth" fullWidth InputLabelProps={{ shrink: true }} />

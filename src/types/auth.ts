@@ -24,7 +24,7 @@ export interface User {
   updatedAt: string;
 }
 
-export type UserRole = 'super_admin' | 'hospital_admin' | 'doctor' | 'patient';
+export type UserRole = 'super_admin' | 'hospital' | 'doctor' | 'patient';
 
 export interface Address {
   street?: string;

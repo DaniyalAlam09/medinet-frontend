@@ -86,7 +86,7 @@ export interface PendingUser {
   firstName: string;
   lastName: string;
   email: string;
-  role: 'doctor' | 'hospital_admin' | 'patient';
+  role: 'doctor' | 'hospital' | 'patient';
   phone?: string;
   hospitalId?: string;
   hospital?: {

@@ -8,14 +8,13 @@ import {
     RadioGroup,
     FormControlLabel,
     FormControl,
-    FormLabel,
     Grid,
-    Chip,
 } from '@mui/material';
 import {
     Person as PersonIcon,
     LocalHospital as HospitalIcon,
     AdminPanelSettings as AdminIcon,
+    Business as BusinessIcon,
 } from '@mui/icons-material';
 
 interface RoleSelectionStepProps {
@@ -40,18 +39,18 @@ const roles = [
         color: '#339164',
     },
     {
-        value: 'hospital_admin',
-        label: 'Hospital Admin',
-        description: 'Manage hospital operations and approve doctor requests',
-        icon: <AdminIcon sx={{ fontSize: 40, color: '#1988C8' }} />,
-        color: '#1988C8',
+        value: 'hospital',
+        label: 'Hospital',
+        description: 'Register your hospital to join the MediNet network',
+        icon: <BusinessIcon sx={{ fontSize: 40, color: '#339164' }} />,
+        color: '#339164',
     },
     {
         value: 'super_admin',
         label: 'Super Admin',
         description: 'System administration and user management',
-        icon: <AdminIcon sx={{ fontSize: 40, color: '#339164' }} />,
-        color: '#339164',
+        icon: <AdminIcon sx={{ fontSize: 40, color: '#1988C8' }} />,
+        color: '#1988C8',
     },
 ];
 

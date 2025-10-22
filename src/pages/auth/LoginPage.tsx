@@ -9,7 +9,13 @@ import {
     Link,
     Alert,
     CircularProgress,
+    InputAdornment,
+    IconButton,
 } from '@mui/material';
+import {
+    Visibility,
+    VisibilityOff,
+} from '@mui/icons-material';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -32,9 +38,14 @@ type LoginFormData = yup.InferType<typeof schema>;
 const LoginPage: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showPassword, setShowPassword] = useState(false);
 
     const { login } = useAuth();
     const navigate = useNavigate();
+
+    const handleTogglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
 
     const {
         register,
@@ -83,7 +94,7 @@ const LoginPage: React.FC = () => {
                         </Alert>
                     )}
 
-                    <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
+                    <Box component="form" noValidate>
                         <TextField
                             {...register('email')}
                             margin="normal"
@@ -104,18 +115,32 @@ const LoginPage: React.FC = () => {
                             fullWidth
                             name="password"
                             label="Password"
-                            type="password"
+                            type={showPassword ? 'text' : 'password'}
                             id="password"
                             autoComplete="current-password"
                             error={!!errors.password}
                             helperText={errors.password?.message}
+                            InputProps={{
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            aria-label="toggle password visibility"
+                                            onClick={handleTogglePasswordVisibility}
+                                            edge="end"
+                                        >
+                                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                                        </IconButton>
+                                    </InputAdornment>
+                                ),
+                            }}
                         />
                         <Button
-                            type="submit"
+                            type="button"
                             fullWidth
                             variant="contained"
                             sx={{ mt: 3, mb: 2 }}
                             disabled={isLoading}
+                            onClick={handleSubmit(onSubmit)}
                         >
                             {isLoading ? <CircularProgress size={24} /> : 'Sign In'}
                         </Button>

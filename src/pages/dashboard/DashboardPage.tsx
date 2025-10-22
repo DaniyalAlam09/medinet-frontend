@@ -8,7 +8,7 @@ import {
 } from '@mui/material';
 import { useAuth } from '../../hooks/useAuth';
 import SuperAdminDashboard from './SuperAdminDashboard';
-import HospitalAdminDashboard from './HospitalAdminDashboard';
+import HospitalDashboard from './HospitalDashboard';
 import DoctorDashboard from './DoctorDashboard';
 import PatientDashboard from './PatientDashboard';
 
@@ -44,8 +44,8 @@ const DashboardPage: React.FC = () => {
     switch (user.role) {
         case 'super_admin':
             return <SuperAdminDashboard />;
-        case 'hospital_admin':
-            return <HospitalAdminDashboard />;
+        case 'hospital':
+            return <HospitalDashboard />;
         case 'doctor':
             return <DoctorDashboard />;
         case 'patient':

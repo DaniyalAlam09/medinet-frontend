@@ -71,7 +71,7 @@ const UsersPage: React.FC = () => {
             firstName: 'Sarah',
             lastName: 'Johnson',
             email: 'sarah.johnson@hospital.com',
-            role: 'hospital_admin',
+            role: 'hospital',
             hospital: 'City General Hospital',
             status: 'Active',
             lastLogin: '2024-01-15 09:15',
@@ -105,7 +105,7 @@ const UsersPage: React.FC = () => {
         switch (role) {
             case 'super_admin':
                 return <AdminIcon />;
-            case 'hospital_admin':
+            case 'hospital':
                 return <HospitalIcon />;
             case 'doctor':
                 return <MedicalIcon />;
@@ -120,7 +120,7 @@ const UsersPage: React.FC = () => {
         switch (role) {
             case 'super_admin':
                 return 'error';
-            case 'hospital_admin':
+            case 'hospital':
                 return 'primary';
             case 'doctor':
                 return 'success';
@@ -225,7 +225,7 @@ const UsersPage: React.FC = () => {
                                 <Typography variant="h6">Admins</Typography>
                             </Box>
                             <Typography variant="h4" color="primary">
-                                {users.filter(u => u.role === 'super_admin' || u.role === 'hospital_admin').length}
+                                {users.filter(u => u.role === 'super_admin' || u.role === 'hospital').length}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                                 System administrators
@@ -289,7 +289,7 @@ const UsersPage: React.FC = () => {
                             >
                                 <MenuItem value="all">All Roles</MenuItem>
                                 <MenuItem value="super_admin">Super Admin</MenuItem>
-                                <MenuItem value="hospital_admin">Hospital Admin</MenuItem>
+                                <MenuItem value="hospital">Hospital Admin</MenuItem>
                                 <MenuItem value="doctor">Doctor</MenuItem>
                                 <MenuItem value="patient">Patient</MenuItem>
                             </Select>

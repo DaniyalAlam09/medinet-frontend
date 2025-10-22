@@ -20,7 +20,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../hooks/useAuth';
 import SuperAdminSidebar from '../components/layout/SuperAdminSidebar';
-import HospitalAdminSidebar from '../components/layout/HospitalAdminSidebar';
+import HospitalSidebar from '../components/layout/HospitalSidebar';
 import DoctorSidebar from '../components/layout/DoctorSidebar';
 import PatientSidebar from '../components/layout/PatientSidebar';
 
@@ -83,8 +83,8 @@ const DashboardLayout: React.FC = () => {
         switch (user.role) {
             case 'super_admin':
                 return <SuperAdminSidebar {...sidebarProps} />;
-            case 'hospital_admin':
-                return <HospitalAdminSidebar {...sidebarProps} />;
+            case 'hospital':
+                return <HospitalSidebar {...sidebarProps} />;
             case 'doctor':
                 return <DoctorSidebar {...sidebarProps} />;
             case 'patient':

@@ -194,20 +194,33 @@ export const referralAPI = {
 
 // Analytics API
 export const analyticsAPI = {
-  getDashboard: () =>
-    apiClient.get('/api/analytics/dashboard'),
-  
-  getHospitals: (params?: any) =>
-    apiClient.get('/api/analytics/hospitals', { params }),
-  
-  getReferrals: (params?: any) =>
-    apiClient.get('/api/analytics/referrals', { params }),
-  
-  getPatients: (params?: any) =>
-    apiClient.get('/api/analytics/patients', { params }),
-  
-  getReports: (params?: any) =>
-    apiClient.get('/api/analytics/reports', { params }),
+    getDashboard: () =>
+        apiClient.get('/api/analytics/dashboard'),
+
+    getHospitals: (params?: any) =>
+        apiClient.get('/api/analytics/hospitals', { params }),
+
+    getReferrals: (params?: any) =>
+        apiClient.get('/api/analytics/referrals', { params }),
+
+    getPatients: (params?: any) =>
+        apiClient.get('/api/analytics/patients', { params }),
+
+    getReports: (params?: any) =>
+        apiClient.get('/api/analytics/reports', { params }),
+
+    // Role-specific dashboard endpoints
+    getSuperAdminDashboard: () =>
+        apiClient.get('/api/analytics/super-admin-dashboard'),
+
+        getHospitalDashboard: () =>
+            apiClient.get('/api/analytics/hospital-dashboard'),
+
+    getDoctorDashboard: () =>
+        apiClient.get('/api/analytics/doctor-dashboard'),
+
+    getPatientDashboard: () =>
+        apiClient.get('/api/analytics/patient-dashboard'),
 };
 
 export default api;

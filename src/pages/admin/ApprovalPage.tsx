@@ -201,7 +201,7 @@ const ApprovalPage: React.FC = () => {
         switch (role) {
             case 'super_admin':
                 return 'error';
-            case 'hospital_admin':
+            case 'hospital':
                 return 'primary';
             case 'doctor':
                 return 'info';

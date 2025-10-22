@@ -118,7 +118,7 @@ const AppRoutes: React.FC = () => {
                 <Route
                     path="hospitals"
                     element={
-                        <RoleBasedRoute allowedRoles={['super_admin', 'hospital_admin']}>
+                        <RoleBasedRoute allowedRoles={['super_admin', 'hospital']}>
                             <HospitalsPage />
                         </RoleBasedRoute>
                     }
@@ -128,7 +128,7 @@ const AppRoutes: React.FC = () => {
                 <Route
                     path="doctors"
                     element={
-                        <RoleBasedRoute allowedRoles={['super_admin', 'hospital_admin']}>
+                        <RoleBasedRoute allowedRoles={['super_admin', 'hospital']}>
                             <DoctorsPage />
                         </RoleBasedRoute>
                     }
@@ -136,7 +136,7 @@ const AppRoutes: React.FC = () => {
                 <Route
                     path="doctor-approvals"
                     element={
-                        <RoleBasedRoute allowedRoles={['hospital_admin']}>
+                        <RoleBasedRoute allowedRoles={['hospital']}>
                             <DoctorApprovalPage />
                         </RoleBasedRoute>
                     }

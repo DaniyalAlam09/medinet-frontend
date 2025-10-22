@@ -7,7 +7,6 @@ import {
     StepLabel,
     Button,
     Typography,
-    Alert,
     CircularProgress,
 } from '@mui/material';
 import { useForm } from 'react-hook-form';
@@ -21,9 +20,15 @@ import PersonalInfoStep from '../../components/auth/PersonalInfoStep';
 import ProfessionalInfoStep from '../../components/auth/ProfessionalInfoStep';
 import PasswordStep from '../../components/auth/PasswordStep';
 import { authAPI } from '../../utils/api';
+import { hospitalApi } from '../../utils/approvalApi';
 import { RegisterData } from '../../types/auth';
 
-const steps = ['Role', 'Personal Info', 'Professional Info', 'Password'];
+const getSteps = (role: string) => {
+    if (role === 'hospital') {
+        return ['Role', 'Hospital Info', 'Password'];
+    }
+    return ['Role', 'Personal Info', 'Professional Info', 'Password'];
+};
 
 const createValidationSchema = (selectedRole: string) => {
     const baseSchema = {
@@ -51,18 +56,11 @@ const createValidationSchema = (selectedRole: string) => {
             hospitalId: yup.string().required('Hospital selection is required'),
             specialization: yup.string().required('Specialization is required'),
             licenseNumber: yup.string().required('Medical license number is required'),
-            experience: yup.number().required('Experience is required'),
+            yearsOfExperience: yup.number().required('Years of experience is required'),
             qualification: yup.string().required('Qualification is required'),
         });
     }
 
-    if (selectedRole === 'hospital_admin') {
-        return yup.object({
-            ...baseSchema,
-            department: yup.string().required('Department is required'),
-            position: yup.string().required('Position is required'),
-        });
-    }
 
     if (selectedRole === 'patient') {
         return yup.object({
@@ -83,6 +81,32 @@ const createValidationSchema = (selectedRole: string) => {
         });
     }
 
+    if (selectedRole === 'hospital') {
+        return yup.object({
+            role: yup.string().required('Please select a role'),
+            firstName: yup.string().required('First name is required'),
+            lastName: yup.string().required('Last name is required'),
+            email: yup.string().email('Please provide a valid email').required('Email is required'),
+            password: yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
+            confirmPassword: yup.string().oneOf([yup.ref('password')], 'Passwords must match').required('Confirm password is required'),
+            hospitalName: yup.string().required('Hospital name is required'),
+            hospitalPhone: yup.string().required('Hospital phone is required'),
+            hospitalType: yup.string().required('Hospital type is required'),
+            hospitalWebsite: yup.string().url('Please provide a valid website URL').optional(),
+            hospitalAddress: yup.string().required('Hospital address is required'),
+            hospitalCity: yup.string().required('Hospital city is required'),
+            hospitalState: yup.string().required('Hospital state is required'),
+            hospitalZipCode: yup.string().required('Hospital ZIP code is required'),
+            hospitalCountry: yup.string().required('Hospital country is required'),
+            totalBeds: yup.number().min(1, 'Total beds must be at least 1').required('Total beds is required'),
+            icuBeds: yup.number().min(0, 'ICU beds cannot be negative').default(0),
+            emergencyBeds: yup.number().min(0, 'Emergency beds cannot be negative').default(0),
+            specialties: yup.array().of(yup.string()).optional(),
+            services: yup.array().of(yup.string()).optional(),
+            hospitalDescription: yup.string().max(1000, 'Description cannot exceed 1000 characters').optional(),
+        });
+    }
+
     return yup.object(baseSchema);
 };
 
@@ -100,17 +124,53 @@ const StepperRegisterPage: React.FC = () => {
         handleSubmit,
         formState: { errors },
         trigger,
-        getValues,
-        setValue,
         reset,
-    } = useForm({
-        resolver: yupResolver(validationSchema),
+    } = useForm<any>({
+        resolver: yupResolver(validationSchema as any),
         mode: 'onChange',
+        defaultValues: {
+            role: '',
+            firstName: '',
+            lastName: '',
+            email: '',
+            phone: '',
+            hospitalPhone: '',
+            dateOfBirth: '',
+            address: '',
+            gender: '',
+            hospitalName: '',
+            hospitalType: '',
+            hospitalWebsite: '',
+            hospitalAddress: '',
+            hospitalCity: '',
+            hospitalState: '',
+            hospitalZipCode: '',
+            hospitalCountry: '',
+            totalBeds: 0,
+            icuBeds: 0,
+            emergencyBeds: 0,
+            specialties: [],
+            services: [],
+            hospitalDescription: '',
+            hospitalId: '',
+            specialization: '',
+            licenseNumber: '',
+            yearsOfExperience: 0,
+            qualification: '',
+            emergencyContact: '',
+            emergencyPhone: '',
+            medicalHistory: '',
+            adminLevel: '',
+            organization: '',
+            responsibilities: '',
+            password: '',
+            confirmPassword: '',
+        },
     });
 
     const handleNext = async () => {
         const fieldsToValidate = getFieldsForStep(activeStep);
-        const isValid = await trigger(fieldsToValidate);
+        const isValid = await trigger(fieldsToValidate as any);
 
         if (isValid) {
             setActiveStep((prevActiveStep) => prevActiveStep + 1);
@@ -126,23 +186,23 @@ const StepperRegisterPage: React.FC = () => {
             case 0:
                 return ['role'];
             case 1:
-                const personalFields = ['firstName', 'lastName', 'email', 'phone', 'dateOfBirth', 'address'];
-                if (selectedRole !== 'hospital_admin') {
-                    personalFields.push('gender');
+                if (selectedRole === 'hospital') {
+                    return ['firstName', 'lastName', 'email', 'hospitalName', 'hospitalPhone', 'hospitalType', 'hospitalWebsite', 'hospitalAddress', 'hospitalCity', 'hospitalState', 'hospitalZipCode', 'hospitalCountry', 'totalBeds', 'icuBeds', 'emergencyBeds', 'specialties', 'services', 'hospitalDescription'];
                 }
+                const personalFields = ['firstName', 'lastName', 'email', 'phone', 'dateOfBirth', 'address', 'gender'];
                 return personalFields;
             case 2:
                 if (selectedRole === 'doctor') {
-                    return ['hospitalId', 'specialization', 'licenseNumber', 'experience', 'qualification'];
-                }
-                if (selectedRole === 'hospital_admin') {
-                    return ['department', 'position'];
+                    return ['hospitalId', 'specialization', 'licenseNumber', 'yearsOfExperience', 'qualification'];
                 }
                 if (selectedRole === 'patient') {
                     return ['emergencyContact', 'emergencyPhone', 'medicalHistory'];
                 }
                 if (selectedRole === 'super_admin') {
                     return ['adminLevel', 'organization', 'responsibilities'];
+                }
+                if (selectedRole === 'hospital') {
+                    return []; // Hospital fields are in step 1, no step 2 needed
                 }
                 return [];
             case 3:
@@ -155,14 +215,52 @@ const StepperRegisterPage: React.FC = () => {
     const onSubmit = async (data: any) => {
         setLoading(true);
         try {
-            const registerData: RegisterData = {
-                ...data,
-                role: selectedRole as 'patient' | 'doctor' | 'hospital_admin' | 'super_admin',
-            };
+            if (selectedRole === 'hospital') {
+                // Handle hospital registration
+                const hospitalData = {
+                    firstName: data.firstName,
+                    lastName: data.lastName,
+                    email: data.email,
+                    password: data.password,
+                    phone: data.hospitalPhone,
+                    name: data.hospitalName,
+                    address: {
+                        street: data.hospitalAddress,
+                        city: data.hospitalCity,
+                        state: data.hospitalState,
+                        zipCode: data.hospitalZipCode,
+                        country: data.hospitalCountry,
+                    },
+                    type: data.hospitalType,
+                    specialties: data.specialties || [],
+                    capacity: {
+                        beds: data.totalBeds,
+                        icuBeds: data.icuBeds || 0,
+                        emergencyBeds: data.emergencyBeds || 0,
+                    },
+                    services: data.services || [],
+                    website: data.hospitalWebsite,
+                    description: data.hospitalDescription,
+                };
 
-            await authAPI.register(registerData);
-            toast.success('Registration successful! Please check your email for verification.');
-            navigate('/login');
+                await hospitalApi.registerHospital(hospitalData);
+                toast.success('Hospital registered successfully! Please login to complete your administrator registration.');
+                navigate('/login', {
+                    state: {
+                        message: 'Hospital registered successfully! Please login to complete your administrator registration.'
+                    }
+                });
+            } else {
+                // Handle user registration
+                const registerData: RegisterData = {
+                    ...data,
+                    role: selectedRole as 'patient' | 'doctor' | 'super_admin',
+                };
+
+                await authAPI.register(registerData);
+                toast.success('Registration successful! Please check your email for verification.');
+                navigate('/login');
+            }
         } catch (error: any) {
             console.error('Registration error:', error);
             toast.error(error.response?.data?.message || 'Registration failed. Please try again.');
@@ -172,7 +270,14 @@ const StepperRegisterPage: React.FC = () => {
     };
 
     const renderStepContent = (step: number) => {
-        switch (step) {
+        // Adjust step numbers based on role
+        let actualStep = step;
+        if (selectedRole === 'hospital') {
+            // Hospital: Role -> Hospital Info -> Password (skip professional info)
+            if (step === 2) actualStep = 3; // Skip step 2, move password to step 2
+        }
+
+        switch (actualStep) {
             case 0:
                 return (
                     <RoleSelectionStep
@@ -181,7 +286,7 @@ const StepperRegisterPage: React.FC = () => {
                             setSelectedRole(role);
                             reset({ role });
                         }}
-                        error={errors.role?.message}
+                        error={errors.role?.message as string}
                     />
                 );
             case 1:
@@ -193,6 +298,19 @@ const StepperRegisterPage: React.FC = () => {
                     />
                 );
             case 2:
+                if (selectedRole === 'hospital') {
+                    // For hospital, step 2 is password
+                    return (
+                        <PasswordStep
+                            control={control}
+                            errors={errors}
+                            showPassword={showPassword}
+                            showConfirmPassword={showConfirmPassword}
+                            onTogglePassword={() => setShowPassword(!showPassword)}
+                            onToggleConfirmPassword={() => setShowConfirmPassword(!showConfirmPassword)}
+                        />
+                    );
+                }
                 return (
                     <ProfessionalInfoStep
                         control={control}
@@ -216,7 +334,7 @@ const StepperRegisterPage: React.FC = () => {
         }
     };
 
-    const isStepOptional = (step: number) => {
+    const isStepOptional = (_step: number) => {
         return false; // No steps are optional now
     };
 
@@ -250,7 +368,7 @@ const StepperRegisterPage: React.FC = () => {
                 </Typography>
 
                 <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-                    {steps.map((label, index) => (
+                    {getSteps(selectedRole).map((label, index) => (
                         <Step key={label}>
                             <StepLabel optional={isStepOptional(index) && <Typography variant="caption">Optional</Typography>}>
                                 {label}
@@ -272,7 +390,7 @@ const StepperRegisterPage: React.FC = () => {
                         Back
                     </Button>
                     <Box sx={{ flex: '1 1 auto' }} />
-                    {activeStep === steps.length - 1 ? (
+                    {activeStep === getSteps(selectedRole).length - 1 ? (
                         <Button
                             variant="contained"
                             onClick={handleSubmit(onSubmit)}

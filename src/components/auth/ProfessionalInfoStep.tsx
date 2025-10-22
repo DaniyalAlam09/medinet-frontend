@@ -10,6 +10,7 @@ import {
     FormHelperText,
     Autocomplete,
     CircularProgress,
+    Chip,
 } from '@mui/material';
 import { Controller, Control, FieldErrors } from 'react-hook-form';
 import { hospitalApi } from '../../utils/approvalApi';
@@ -132,20 +133,20 @@ const ProfessionalInfoStep: React.FC<ProfessionalInfoStepProps> = ({
                         </Grid>
                         <Grid item xs={12} sm={6}>
                             <Controller
-                                name="experience"
+                                name="yearsOfExperience"
                                 control={control}
                                 render={({ field }) => (
-                                    <FormControl fullWidth required error={!!errors.experience}>
+                                    <FormControl fullWidth required error={!!errors.yearsOfExperience}>
                                         <InputLabel>Years of Experience</InputLabel>
-                                        <Select {...field} label="Years of Experience">
+                                        <Select {...field} label="Years of Experience" value={field.value || ''}>
                                             {Array.from({ length: 50 }, (_, i) => i + 1).map((year) => (
                                                 <MenuItem key={year} value={year}>
                                                     {year} {year === 1 ? 'year' : 'years'}
                                                 </MenuItem>
                                             ))}
                                         </Select>
-                                        {errors.experience && (
-                                            <FormHelperText>{errors.experience.message}</FormHelperText>
+                                        {errors.yearsOfExperience && (
+                                            <FormHelperText>{errors.yearsOfExperience.message}</FormHelperText>
                                         )}
                                     </FormControl>
                                 )}
@@ -170,42 +171,6 @@ const ProfessionalInfoStep: React.FC<ProfessionalInfoStepProps> = ({
                     </>
                 )}
 
-                {selectedRole === 'hospital_admin' && (
-                    <>
-                        <Grid item xs={12} sm={6}>
-                            <Controller
-                                name="department"
-                                control={control}
-                                render={({ field }) => (
-                                    <TextField
-                                        {...field}
-                                        fullWidth
-                                        label="Department"
-                                        required
-                                        error={!!errors.department}
-                                        helperText={errors.department?.message}
-                                    />
-                                )}
-                            />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <Controller
-                                name="position"
-                                control={control}
-                                render={({ field }) => (
-                                    <TextField
-                                        {...field}
-                                        fullWidth
-                                        label="Position"
-                                        required
-                                        error={!!errors.position}
-                                        helperText={errors.position?.message}
-                                    />
-                                )}
-                            />
-                        </Grid>
-                    </>
-                )}
 
                 {selectedRole === 'patient' && (
                     <>
@@ -270,7 +235,7 @@ const ProfessionalInfoStep: React.FC<ProfessionalInfoStepProps> = ({
                                 render={({ field }) => (
                                     <FormControl fullWidth required error={!!errors.adminLevel}>
                                         <InputLabel>Admin Level</InputLabel>
-                                        <Select {...field} label="Admin Level">
+                                        <Select {...field} label="Admin Level" value={field.value || ''}>
                                             <MenuItem value="system">System Administrator</MenuItem>
                                             <MenuItem value="platform">Platform Administrator</MenuItem>
                                             <MenuItem value="support">Support Administrator</MenuItem>
@@ -318,6 +283,7 @@ const ProfessionalInfoStep: React.FC<ProfessionalInfoStepProps> = ({
                         </Grid>
                     </>
                 )}
+
             </Grid>
         </Box>
     );

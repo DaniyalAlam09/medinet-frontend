@@ -32,13 +32,13 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
-interface HospitalAdminSidebarProps {
+interface HospitalSidebarProps {
     open: boolean;
     onClose: () => void;
     variant?: 'temporary' | 'permanent';
 }
 
-const HospitalAdminSidebar: React.FC<HospitalAdminSidebarProps> = ({ open, onClose, variant = 'temporary' }) => {
+const HospitalSidebar: React.FC<HospitalSidebarProps> = ({ open, onClose, variant = 'temporary' }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user } = useAuth();
@@ -219,4 +219,4 @@ const HospitalAdminSidebar: React.FC<HospitalAdminSidebarProps> = ({ open, onClo
     );
 };
 
-export default HospitalAdminSidebar;
+export default HospitalSidebar;
