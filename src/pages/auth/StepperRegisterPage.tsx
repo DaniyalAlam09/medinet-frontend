@@ -53,7 +53,28 @@ const createValidationSchema = (selectedRole: string) => {
         return yup.object({
             ...baseSchema,
             gender: yup.string().required('Gender is required'),
-            hospitalId: yup.string().required('Hospital selection is required'),
+            practiceType: yup.string().oneOf(['own_clinic', 'hospital'], 'Please select a practice type').required('Practice type is required'),
+            hospitalId: yup.string().when('practiceType', {
+                is: 'hospital',
+                then: (schema) => schema.required('Hospital selection is required'),
+                otherwise: (schema) => schema.notRequired(),
+            }),
+            clinicName: yup.string().when('practiceType', {
+                is: 'own_clinic',
+                then: (schema) => schema.required('Clinic name is required'),
+                otherwise: (schema) => schema.notRequired(),
+            }),
+            clinicAddress: yup.object().when('practiceType', {
+                is: 'own_clinic',
+                then: (schema) => schema.shape({
+                    street: yup.string().required('Street address is required'),
+                    city: yup.string().required('City is required'),
+                    state: yup.string().required('State is required'),
+                    zipCode: yup.string().required('ZIP code is required'),
+                    country: yup.string().required('Country is required'),
+                }),
+                otherwise: (schema) => schema.notRequired(),
+            }),
             specialization: yup.string().required('Specialization is required'),
             licenseNumber: yup.string().required('Medical license number is required'),
             yearsOfExperience: yup.number().required('Years of experience is required'),
@@ -125,6 +146,8 @@ const StepperRegisterPage: React.FC = () => {
         formState: { errors },
         trigger,
         reset,
+        getValues,
+        setValue,
     } = useForm<any>({
         resolver: yupResolver(validationSchema as any),
         mode: 'onChange',
@@ -152,7 +175,20 @@ const StepperRegisterPage: React.FC = () => {
             specialties: [],
             services: [],
             hospitalDescription: '',
+            practiceType: '',
             hospitalId: '',
+            clinicName: '',
+            clinicAddress: {
+                street: '',
+                city: '',
+                state: '',
+                zipCode: '',
+                country: 'USA',
+            },
+            clinicPhone: '',
+            clinicEmail: '',
+            clinicWebsite: '',
+            clinicDescription: '',
             specialization: '',
             licenseNumber: '',
             yearsOfExperience: 0,
@@ -193,7 +229,15 @@ const StepperRegisterPage: React.FC = () => {
                 return personalFields;
             case 2:
                 if (selectedRole === 'doctor') {
-                    return ['hospitalId', 'specialization', 'licenseNumber', 'yearsOfExperience', 'qualification'];
+                    const fields = ['practiceType', 'specialization', 'licenseNumber', 'yearsOfExperience', 'qualification'];
+                    // Add conditional fields based on practiceType
+                    const practiceType = getValues('practiceType');
+                    if (practiceType === 'hospital') {
+                        fields.push('hospitalId');
+                    } else if (practiceType === 'own_clinic') {
+                        fields.push('clinicName', 'clinicAddress.street', 'clinicAddress.city', 'clinicAddress.state', 'clinicAddress.zipCode', 'clinicAddress.country');
+                    }
+                    return fields;
                 }
                 if (selectedRole === 'patient') {
                     return ['emergencyContact', 'emergencyPhone', 'medicalHistory'];
@@ -252,10 +296,15 @@ const StepperRegisterPage: React.FC = () => {
                 });
             } else {
                 // Handle user registration
-                const registerData: RegisterData = {
+                let registerData: any = {
                     ...data,
                     role: selectedRole as 'patient' | 'doctor' | 'super_admin',
                 };
+
+                // For doctors, format clinic data if own_clinic
+                if (selectedRole === 'doctor' && data.practiceType === 'own_clinic') {
+                    registerData.clinicAddress = data.clinicAddress;
+                }
 
                 await authAPI.register(registerData);
                 toast.success('Registration successful! Please check your email for verification.');

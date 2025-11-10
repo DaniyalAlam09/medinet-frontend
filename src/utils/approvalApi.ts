@@ -89,8 +89,126 @@ export const hospitalApi = {
   },
 
   // Delete hospital
-  deleteHospital: async (id: string) => {
-    const response = await api.delete(`/api/hospitals/${id}`);
+  deleteHospital: async (id: string, deleteUsers: boolean = false) => {
+    const response = await api.delete(`/api/hospitals/${id}`, {
+      data: { deleteUsers }
+    });
+    return response.data;
+  },
+};
+
+export const userApi = {
+  // Get all users (Super Admin)
+  getUsers: async (params?: { role?: string; status?: string; search?: string; page?: number; limit?: number }) => {
+    const response = await api.get('/api/users', { params });
+    return response.data;
+  },
+
+  // Get user by ID
+  getUserById: async (id: string) => {
+    const response = await api.get(`/api/users/${id}`);
+    return response.data;
+  },
+
+  // Get user statistics
+  getUserStats: async () => {
+    const response = await api.get('/api/users/stats');
+    return response.data;
+  },
+
+  // Update user
+  updateUser: async (id: string, userData: any) => {
+    const response = await api.put(`/api/users/${id}`, userData);
+    return response.data;
+  },
+
+  // Delete user
+  deleteUser: async (id: string) => {
+    const response = await api.delete(`/api/users/${id}`);
+    return response.data;
+  },
+
+  // Toggle user status
+  toggleUserStatus: async (id: string) => {
+    const response = await api.patch(`/api/users/${id}/toggle-status`);
+    return response.data;
+  },
+};
+
+export const doctorApi = {
+  // Get all doctors
+  getDoctors: async (params?: { status?: string; search?: string; specialization?: string; hospitalId?: string; page?: number; limit?: number }) => {
+    const response = await api.get('/api/doctors', { params });
+    return response.data;
+  },
+
+  // Get doctor by ID
+  getDoctorById: async (id: string) => {
+    const response = await api.get(`/api/doctors/${id}`);
+    return response.data;
+  },
+
+  // Create doctor
+  createDoctor: async (doctorData: any) => {
+    const response = await api.post('/api/doctors', doctorData);
+    return response.data;
+  },
+};
+
+export const patientApi = {
+  // Get all patients
+  getPatients: async (params?: { status?: string; search?: string; hospitalId?: string; page?: number; limit?: number }) => {
+    const response = await api.get('/api/patients', { params });
+    return response.data;
+  },
+
+  // Get patient by ID
+  getPatientById: async (id: string) => {
+    const response = await api.get(`/api/patients/${id}`);
+    return response.data;
+  },
+
+  // Create patient
+  createPatient: async (patientData: any) => {
+    const response = await api.post('/api/patients', patientData);
+    return response.data;
+  },
+
+  // Get patient profile
+  getPatientProfile: async (id: string) => {
+    const response = await api.get(`/api/patients/${id}/profile`);
+    return response.data;
+  },
+
+  // Get patient referrals
+  getPatientReferrals: async (id: string) => {
+    const response = await api.get(`/api/patients/${id}/referrals`);
+    return response.data;
+  },
+
+  // Get patient medical history
+  getPatientMedicalHistory: async (id: string) => {
+    const response = await api.get(`/api/patients/${id}/medical-history`);
+    return response.data;
+  },
+};
+
+export const analyticsApi = {
+  // Get referral trends
+  getReferralTrends: async (params?: { period?: number }) => {
+    const response = await api.get('/api/analytics/referral-trends', { params });
+    return response.data;
+  },
+
+  // Get user activity patterns
+  getUserActivityPatterns: async (params?: { period?: number }) => {
+    const response = await api.get('/api/analytics/user-activity', { params });
+    return response.data;
+  },
+
+  // Get system performance metrics
+  getSystemPerformanceMetrics: async () => {
+    const response = await api.get('/api/analytics/system-performance');
     return response.data;
   },
 };

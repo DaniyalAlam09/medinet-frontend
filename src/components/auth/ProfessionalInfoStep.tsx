@@ -11,8 +11,12 @@ import {
     Autocomplete,
     CircularProgress,
     Chip,
+    RadioGroup,
+    FormControlLabel,
+    Radio,
+    Typography,
 } from '@mui/material';
-import { Controller, Control, FieldErrors } from 'react-hook-form';
+import { Controller, Control, FieldErrors, useWatch } from 'react-hook-form';
 import { hospitalApi } from '../../utils/approvalApi';
 import { Hospital } from '../../types/hospital';
 
@@ -29,6 +33,12 @@ const ProfessionalInfoStep: React.FC<ProfessionalInfoStepProps> = ({
 }) => {
     const [hospitals, setHospitals] = useState<Hospital[]>([]);
     const [loadingHospitals, setLoadingHospitals] = useState(false);
+
+    // Watch practiceType to conditionally show fields
+    const practiceType = useWatch({
+        control,
+        name: 'practiceType',
+    });
 
     useEffect(() => {
         if (selectedRole === 'doctor') {
@@ -54,47 +64,255 @@ const ProfessionalInfoStep: React.FC<ProfessionalInfoStepProps> = ({
         <Box>
             <Grid container spacing={3}>
                 {selectedRole === 'doctor' && (
-                    <Grid item xs={12}>
-                        <Controller
-                            name="hospitalId"
-                            control={control}
-                            render={({ field }) => (
-                                <Autocomplete
-                                    options={hospitals}
-                                    getOptionLabel={(option) =>
-                                        typeof option === 'string' ? option : `${option.name} - ${option.address.city}, ${option.address.state}`
-                                    }
-                                    isOptionEqualToValue={(option, value) =>
-                                        typeof option === 'string' ? option === value : option._id === value?._id
-                                    }
-                                    loading={loadingHospitals}
-                                    value={hospitals.find(h => h._id === field.value) || null}
-                                    onChange={(_, value) => {
-                                        field.onChange(value?._id || '');
-                                    }}
-                                    renderInput={(params) => (
-                                        <TextField
-                                            {...params}
-                                            required
-                                            fullWidth
-                                            label="Select Hospital"
-                                            error={!!errors.hospitalId}
-                                            helperText={errors.hospitalId?.message || "Select the hospital you'll be associated with"}
-                                            InputProps={{
-                                                ...params.InputProps,
-                                                endAdornment: (
-                                                    <>
-                                                        {loadingHospitals ? <CircularProgress color="inherit" size={20} /> : null}
-                                                        {params.InputProps.endAdornment}
-                                                    </>
-                                                ),
+                    <>
+                        {/* Practice Type Selection */}
+                        <Grid item xs={12}>
+                            <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
+                                Practice Type
+                            </Typography>
+                            <Controller
+                                name="practiceType"
+                                control={control}
+                                render={({ field }) => (
+                                    <FormControl component="fieldset" error={!!errors.practiceType} fullWidth>
+                                        <RadioGroup
+                                            {...field}
+                                            row
+                                            value={field.value || ''}
+                                            onChange={(e) => {
+                                                field.onChange(e.target.value);
                                             }}
+                                        >
+                                            <FormControlLabel
+                                                value="own_clinic"
+                                                control={<Radio />}
+                                                label="Own Clinic"
+                                            />
+                                            <FormControlLabel
+                                                value="hospital"
+                                                control={<Radio />}
+                                                label="In Hospital"
+                                            />
+                                        </RadioGroup>
+                                        {errors.practiceType && (
+                                            <FormHelperText>{errors.practiceType.message}</FormHelperText>
+                                        )}
+                                    </FormControl>
+                                )}
+                            />
+                        </Grid>
+
+                        {/* Clinic Fields - Show if own_clinic selected */}
+                        {practiceType === 'own_clinic' && (
+                            <>
+                                <Grid item xs={12}>
+                                    <Controller
+                                        name="clinicName"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <TextField
+                                                {...field}
+                                                fullWidth
+                                                label="Clinic Name"
+                                                required
+                                                error={!!errors.clinicName}
+                                                helperText={errors.clinicName?.message}
+                                            />
+                                        )}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <Controller
+                                        name="clinicAddress.street"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <TextField
+                                                {...field}
+                                                fullWidth
+                                                label="Street Address"
+                                                required
+                                                error={!!errors.clinicAddress?.street}
+                                                helperText={errors.clinicAddress?.street?.message}
+                                            />
+                                        )}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <Controller
+                                        name="clinicAddress.city"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <TextField
+                                                {...field}
+                                                fullWidth
+                                                label="City"
+                                                required
+                                                error={!!errors.clinicAddress?.city}
+                                                helperText={errors.clinicAddress?.city?.message}
+                                            />
+                                        )}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={4}>
+                                    <Controller
+                                        name="clinicAddress.state"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <TextField
+                                                {...field}
+                                                fullWidth
+                                                label="State"
+                                                required
+                                                error={!!errors.clinicAddress?.state}
+                                                helperText={errors.clinicAddress?.state?.message}
+                                            />
+                                        )}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={4}>
+                                    <Controller
+                                        name="clinicAddress.zipCode"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <TextField
+                                                {...field}
+                                                fullWidth
+                                                label="ZIP Code"
+                                                required
+                                                error={!!errors.clinicAddress?.zipCode}
+                                                helperText={errors.clinicAddress?.zipCode?.message}
+                                            />
+                                        )}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={4}>
+                                    <Controller
+                                        name="clinicAddress.country"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <TextField
+                                                {...field}
+                                                fullWidth
+                                                label="Country"
+                                                required
+                                                error={!!errors.clinicAddress?.country}
+                                                helperText={errors.clinicAddress?.country?.message}
+                                                defaultValue="USA"
+                                            />
+                                        )}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <Controller
+                                        name="clinicPhone"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <TextField
+                                                {...field}
+                                                fullWidth
+                                                label="Clinic Phone (Optional)"
+                                                error={!!errors.clinicPhone}
+                                                helperText={errors.clinicPhone?.message}
+                                            />
+                                        )}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <Controller
+                                        name="clinicEmail"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <TextField
+                                                {...field}
+                                                fullWidth
+                                                label="Clinic Email (Optional)"
+                                                type="email"
+                                                error={!!errors.clinicEmail}
+                                                helperText={errors.clinicEmail?.message}
+                                            />
+                                        )}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <Controller
+                                        name="clinicWebsite"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <TextField
+                                                {...field}
+                                                fullWidth
+                                                label="Clinic Website (Optional)"
+                                                error={!!errors.clinicWebsite}
+                                                helperText={errors.clinicWebsite?.message}
+                                            />
+                                        )}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <Controller
+                                        name="clinicDescription"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <TextField
+                                                {...field}
+                                                fullWidth
+                                                label="Clinic Description (Optional)"
+                                                multiline
+                                                rows={2}
+                                                error={!!errors.clinicDescription}
+                                                helperText={errors.clinicDescription?.message}
+                                            />
+                                        )}
+                                    />
+                                </Grid>
+                            </>
+                        )}
+
+                        {/* Hospital Selection - Show if hospital selected */}
+                        {practiceType === 'hospital' && (
+                            <Grid item xs={12}>
+                                <Controller
+                                    name="hospitalId"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Autocomplete
+                                            options={hospitals}
+                                            getOptionLabel={(option) =>
+                                                typeof option === 'string' ? option : `${option.name} - ${option.address.city}, ${option.address.state}`
+                                            }
+                                            isOptionEqualToValue={(option, value) =>
+                                                typeof option === 'string' ? option === value : option._id === value?._id
+                                            }
+                                            loading={loadingHospitals}
+                                            value={hospitals.find(h => h._id === field.value) || null}
+                                            onChange={(_, value) => {
+                                                field.onChange(value?._id || '');
+                                            }}
+                                            renderInput={(params) => (
+                                                <TextField
+                                                    {...params}
+                                                    required
+                                                    fullWidth
+                                                    label="Select Hospital"
+                                                    error={!!errors.hospitalId}
+                                                    helperText={errors.hospitalId?.message || "Select the hospital you'll be associated with"}
+                                                    InputProps={{
+                                                        ...params.InputProps,
+                                                        endAdornment: (
+                                                            <>
+                                                                {loadingHospitals ? <CircularProgress color="inherit" size={20} /> : null}
+                                                                {params.InputProps.endAdornment}
+                                                            </>
+                                                        ),
+                                                    }}
+                                                />
+                                            )}
                                         />
                                     )}
                                 />
-                            )}
-                        />
-                    </Grid>
+                            </Grid>
+                        )}
+                    </>
                 )}
 
                 {selectedRole === 'doctor' && (

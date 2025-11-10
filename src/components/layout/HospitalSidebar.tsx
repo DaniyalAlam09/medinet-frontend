@@ -15,19 +15,11 @@ import {
 import {
     Dashboard as DashboardIcon,
     LocalHospital as HospitalIcon,
-    People as PeopleIcon,
     Assignment as AssignmentIcon,
-    Assessment as AssessmentIcon,
     PersonAdd as PersonAddIcon,
     Group as GroupIcon,
     Schedule as ScheduleIcon,
-    MedicalServices as MedicalServicesIcon,
-    Analytics as AnalyticsIcon,
-    Report as ReportIcon,
-    Settings as SettingsIcon,
-    Notifications as NotificationsIcon,
     AdminPanelSettings as AdminIcon,
-    TrendingUp as TrendingUpIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
@@ -79,36 +71,6 @@ const HospitalSidebar: React.FC<HospitalSidebarProps> = ({ open, onClose, varian
             path: '/dashboard/appointments',
             icon: <ScheduleIcon />,
             description: 'Appointment scheduling',
-        },
-        {
-            title: 'Medical Records',
-            path: '/dashboard/records',
-            icon: <AssessmentIcon />,
-            description: 'Medical records',
-        },
-        {
-            title: 'Departments',
-            path: '/dashboard/departments',
-            icon: <MedicalServicesIcon />,
-            description: 'Department management',
-        },
-        {
-            title: 'Analytics',
-            path: '/dashboard/analytics',
-            icon: <AnalyticsIcon />,
-            description: 'Hospital analytics',
-        },
-        {
-            title: 'Reports',
-            path: '/dashboard/reports',
-            icon: <ReportIcon />,
-            description: 'Generate reports',
-        },
-        {
-            title: 'Settings',
-            path: '/dashboard/settings',
-            icon: <SettingsIcon />,
-            description: 'Hospital settings',
         },
         {
             title: 'Profile',

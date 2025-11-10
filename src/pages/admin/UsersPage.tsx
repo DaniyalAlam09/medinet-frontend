@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Box,
     Container,
@@ -12,7 +12,6 @@ import {
     TableContainer,
     TableHead,
     TableRow,
-    Paper,
     Chip,
     IconButton,
     Dialog,
@@ -30,9 +29,11 @@ import {
     Menu,
     ListItemIcon,
     ListItemText,
+    Pagination,
+    InputAdornment,
+    CircularProgress,
 } from '@mui/material';
 import {
-    Add as AddIcon,
     Edit as EditIcon,
     Delete as DeleteIcon,
     MoreVert as MoreVertIcon,
@@ -42,64 +43,33 @@ import {
     MedicalServices as MedicalIcon,
     Group as GroupIcon,
     Search as SearchIcon,
-    FilterList as FilterIcon,
 } from '@mui/icons-material';
+import { toast } from 'react-toastify';
+import { userApi } from '../../utils/approvalApi';
+import { formatDateTime } from '../../components/dashboard/DataTable';
 
 const UsersPage: React.FC = () => {
+    const [users, setUsers] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [stats, setStats] = useState<any>(null);
+    const [pagination, setPagination] = useState({
+        current: 1,
+        pages: 1,
+        total: 0,
+        limit: 10
+    });
+    const [filters, setFilters] = useState({
+        role: 'all',
+        status: 'all',
+        search: ''
+    });
     const [openDialog, setOpenDialog] = useState(false);
     const [dialogType, setDialogType] = useState<'add' | 'edit'>('add');
     const [selectedUser, setSelectedUser] = useState<any>(null);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [roleFilter, setRoleFilter] = useState('all');
-
-    // Mock data
-    const [users, setUsers] = useState([
-        {
-            id: '1',
-            firstName: 'John',
-            lastName: 'Doe',
-            email: 'john.doe@example.com',
-            role: 'super_admin',
-            hospital: 'System',
-            status: 'Active',
-            lastLogin: '2024-01-15 10:30',
-            createdAt: '2024-01-01',
-        },
-        {
-            id: '2',
-            firstName: 'Sarah',
-            lastName: 'Johnson',
-            email: 'sarah.johnson@hospital.com',
-            role: 'hospital',
-            hospital: 'City General Hospital',
-            status: 'Active',
-            lastLogin: '2024-01-15 09:15',
-            createdAt: '2024-01-05',
-        },
-        {
-            id: '3',
-            firstName: 'Dr. Michael',
-            lastName: 'Chen',
-            email: 'michael.chen@hospital.com',
-            role: 'doctor',
-            hospital: 'City General Hospital',
-            status: 'Active',
-            lastLogin: '2024-01-15 08:45',
-            createdAt: '2024-01-10',
-        },
-        {
-            id: '4',
-            firstName: 'Jane',
-            lastName: 'Smith',
-            email: 'jane.smith@example.com',
-            role: 'patient',
-            hospital: 'N/A',
-            status: 'Active',
-            lastLogin: '2024-01-14 16:20',
-            createdAt: '2024-01-12',
-        },
-    ]);
+    const [toggleLoading, setToggleLoading] = useState<string | null>(null);
+    const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
 
     const getRoleIcon = (role: string) => {
         switch (role) {
@@ -131,26 +101,159 @@ const UsersPage: React.FC = () => {
         }
     };
 
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'Active':
+    // Fetch users dynamically
+    const fetchUsers = async (page: number = 1, role?: string, status?: string, search?: string) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const params: any = {
+                page,
+                limit: pagination.limit
+            };
+            if (role && role !== 'all') {
+                params.role = role;
+            }
+            if (status && status !== 'all') {
+                params.status = status;
+            }
+            if (search) {
+                params.search = search;
+            }
+
+            const response = await userApi.getUsers(params);
+            if (response.success) {
+                setUsers(response.data.users || []);
+                setPagination({
+                    current: response.data.pagination?.current || page,
+                    pages: response.data.pagination?.pages || 1,
+                    total: response.data.pagination?.total || 0,
+                    limit: pagination.limit
+                });
+            }
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Failed to fetch users');
+            toast.error('Failed to fetch users');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Fetch user stats
+    const fetchStats = async () => {
+        try {
+            const response = await userApi.getUserStats();
+            if (response.success) {
+                setStats(response.data);
+            }
+        } catch (err: any) {
+            console.error('Failed to fetch user stats:', err);
+            // Set default stats if API fails
+            setStats({
+                total: 0,
+                active: 0,
+                pending: 0,
+                byRole: {
+                    super_admin: 0,
+                    hospital: 0,
+                    doctor: 0,
+                    patient: 0
+                }
+            });
+        }
+    };
+
+    // Fetch users and stats on mount
+    useEffect(() => {
+        fetchUsers(
+            1,
+            filters.role !== 'all' ? filters.role : undefined,
+            filters.status !== 'all' ? filters.status : undefined,
+            filters.search || undefined
+        );
+        fetchStats();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Fetch users when role or status filters change
+    useEffect(() => {
+        fetchUsers(
+            1,
+            filters.role !== 'all' ? filters.role : undefined,
+            filters.status !== 'all' ? filters.status : undefined,
+            filters.search || undefined
+        );
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filters.role, filters.status]);
+
+    // Debounced search
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            fetchUsers(
+                1,
+                filters.role !== 'all' ? filters.role : undefined,
+                filters.status !== 'all' ? filters.status : undefined,
+                filters.search || undefined
+            );
+        }, 500);
+        return () => clearTimeout(timeoutId);
+    }, [filters.search]);
+
+    const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
+        setPagination(prev => ({ ...prev, current: page }));
+        fetchUsers(
+            page,
+            filters.role !== 'all' ? filters.role : undefined,
+            filters.status !== 'all' ? filters.status : undefined,
+            filters.search || undefined
+        );
+    };
+
+    const handleRoleFilterChange = (role: string) => {
+        setFilters(prev => ({ ...prev, role }));
+        setPagination(prev => ({ ...prev, current: 1 }));
+    };
+
+    const handleStatusFilterChange = (status: string) => {
+        setFilters(prev => ({ ...prev, status }));
+        setPagination(prev => ({ ...prev, current: 1 }));
+    };
+
+    const handleSearchChange = (search: string) => {
+        setFilters(prev => ({ ...prev, search }));
+        setPagination(prev => ({ ...prev, current: 1 }));
+    };
+
+    const getStatusColor = (user: any) => {
+        if (!user.isActive) {
+            return 'error';
+        }
+        switch (user.approvalStatus) {
+            case 'approved':
                 return 'success';
-            case 'Inactive':
-                return 'error';
-            case 'Pending':
+            case 'pending':
                 return 'warning';
+            case 'rejected':
+                return 'error';
             default:
                 return 'default';
         }
     };
 
-    const filteredUsers = users.filter(user => {
-        const matchesSearch = user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.email.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-        return matchesSearch && matchesRole;
-    });
+    const getStatusLabel = (user: any) => {
+        if (!user.isActive) {
+            return 'Inactive';
+        }
+        switch (user.approvalStatus) {
+            case 'approved':
+                return 'Active';
+            case 'pending':
+                return 'Pending';
+            case 'rejected':
+                return 'Rejected';
+            default:
+                return 'Unknown';
+        }
+    };
 
     const handleOpenDialog = (type: 'add' | 'edit', user?: any) => {
         setDialogType(type);
@@ -173,18 +276,49 @@ const UsersPage: React.FC = () => {
         setSelectedUser(null);
     };
 
-    const handleDeleteUser = (userId: string) => {
-        setUsers(users.filter(user => user.id !== userId));
-        handleMenuClose();
+    const handleDeleteUser = async (userId: string) => {
+        if (!window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+            handleMenuClose();
+            return;
+        }
+
+        setDeleteLoading(userId);
+        try {
+            await userApi.deleteUser(userId);
+            toast.success('User deleted successfully');
+            handleMenuClose();
+            fetchUsers(
+                pagination.current,
+                filters.role !== 'all' ? filters.role : undefined,
+                filters.status !== 'all' ? filters.status : undefined,
+                filters.search || undefined
+            );
+            fetchStats();
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Failed to delete user');
+        } finally {
+            setDeleteLoading(null);
+        }
     };
 
-    const handleToggleStatus = (userId: string) => {
-        setUsers(users.map(user =>
-            user.id === userId
-                ? { ...user, status: user.status === 'Active' ? 'Inactive' : 'Active' }
-                : user
-        ));
-        handleMenuClose();
+    const handleToggleStatus = async (userId: string) => {
+        setToggleLoading(userId);
+        try {
+            await userApi.toggleUserStatus(userId);
+            toast.success('User status updated successfully');
+            handleMenuClose();
+            fetchUsers(
+                pagination.current,
+                filters.role !== 'all' ? filters.role : undefined,
+                filters.status !== 'all' ? filters.status : undefined,
+                filters.search || undefined
+            );
+            fetchStats();
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Failed to update user status');
+        } finally {
+            setToggleLoading(null);
+        }
     };
 
     return (
@@ -199,6 +333,20 @@ const UsersPage: React.FC = () => {
                 </Typography>
             </Box>
 
+            {/* Loading State */}
+            {loading && users.length === 0 && (
+                <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
+                    <CircularProgress size={60} />
+                </Box>
+            )}
+
+            {/* Error Message */}
+            {error && (
+                <Alert severity="error" sx={{ mb: 3 }}>
+                    {error}
+                </Alert>
+            )}
+
             {/* Stats Cards */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
                 <Grid item xs={12} sm={6} md={3}>
@@ -209,10 +357,10 @@ const UsersPage: React.FC = () => {
                                 <Typography variant="h6">Total Users</Typography>
                             </Box>
                             <Typography variant="h4" color="primary">
-                                {users.length}
+                                {stats?.total || pagination.total || 0}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                                {users.filter(u => u.status === 'Active').length} active
+                                {stats?.active || users.filter(u => u.isActive && u.approvalStatus === 'approved').length || 0} active
                             </Typography>
                         </CardContent>
                     </Card>
@@ -225,7 +373,7 @@ const UsersPage: React.FC = () => {
                                 <Typography variant="h6">Admins</Typography>
                             </Box>
                             <Typography variant="h4" color="primary">
-                                {users.filter(u => u.role === 'super_admin' || u.role === 'hospital').length}
+                                {(stats?.byRole?.super_admin || 0)}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                                 System administrators
@@ -241,7 +389,7 @@ const UsersPage: React.FC = () => {
                                 <Typography variant="h6">Doctors</Typography>
                             </Box>
                             <Typography variant="h4" color="primary">
-                                {users.filter(u => u.role === 'doctor').length}
+                                {stats?.byRole?.doctor || 0}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                                 Medical professionals
@@ -257,7 +405,7 @@ const UsersPage: React.FC = () => {
                                 <Typography variant="h6">Patients</Typography>
                             </Box>
                             <Typography variant="h4" color="primary">
-                                {users.filter(u => u.role === 'patient').length}
+                                {stats?.byRole?.patient || 0}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                                 Registered patients
@@ -273,18 +421,22 @@ const UsersPage: React.FC = () => {
                     <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                         <TextField
                             placeholder="Search users..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            value={filters.search}
+                            onChange={(e) => handleSearchChange(e.target.value)}
                             InputProps={{
-                                startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <SearchIcon />
+                                    </InputAdornment>
+                                ),
                             }}
-                            sx={{ minWidth: 250 }}
+                            sx={{ minWidth: 250, flexGrow: 1 }}
                         />
                         <FormControl sx={{ minWidth: 150 }}>
                             <InputLabel>Filter by Role</InputLabel>
                             <Select
-                                value={roleFilter}
-                                onChange={(e) => setRoleFilter(e.target.value)}
+                                value={filters.role}
+                                onChange={(e) => handleRoleFilterChange(e.target.value)}
                                 label="Filter by Role"
                             >
                                 <MenuItem value="all">All Roles</MenuItem>
@@ -294,81 +446,129 @@ const UsersPage: React.FC = () => {
                                 <MenuItem value="patient">Patient</MenuItem>
                             </Select>
                         </FormControl>
-                        <Box sx={{ flexGrow: 1 }} />
-                        <Button
-                            variant="contained"
-                            startIcon={<AddIcon />}
-                            onClick={() => handleOpenDialog('add')}
-                        >
-                            Add User
-                        </Button>
+                        <FormControl sx={{ minWidth: 150 }}>
+                            <InputLabel>Filter by Status</InputLabel>
+                            <Select
+                                value={filters.status}
+                                onChange={(e) => handleStatusFilterChange(e.target.value)}
+                                label="Filter by Status"
+                            >
+                                <MenuItem value="all">All Statuses</MenuItem>
+                                <MenuItem value="active">Active</MenuItem>
+                                <MenuItem value="inactive">Inactive</MenuItem>
+                                <MenuItem value="pending">Pending</MenuItem>
+                                <MenuItem value="approved">Approved</MenuItem>
+                                <MenuItem value="rejected">Rejected</MenuItem>
+                            </Select>
+                        </FormControl>
+                        <Typography variant="body2" color="text.secondary">
+                            Total: {pagination.total} users
+                        </Typography>
                     </Box>
                 </CardContent>
             </Card>
 
             {/* Users Table */}
             <Card>
-                <TableContainer>
-                    <Table>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>User</TableCell>
-                                <TableCell>Role</TableCell>
-                                <TableCell>Hospital</TableCell>
-                                <TableCell>Status</TableCell>
-                                <TableCell>Last Login</TableCell>
-                                <TableCell>Created</TableCell>
-                                <TableCell>Actions</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {filteredUsers.map((user) => (
-                                <TableRow key={user.id}>
-                                    <TableCell>
-                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                            <Avatar sx={{ mr: 2, bgcolor: 'primary.main' }}>
-                                                {getRoleIcon(user.role)}
-                                            </Avatar>
-                                            <Box>
-                                                <Typography variant="subtitle2">
-                                                    {user.firstName} {user.lastName}
-                                                </Typography>
+                {loading ? (
+                    <Box display="flex" justifyContent="center" py={4}>
+                        <CircularProgress size={60} />
+                    </Box>
+                ) : (
+                    <>
+                        <TableContainer>
+                            <Table>
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell>User</TableCell>
+                                        <TableCell>Role</TableCell>
+                                        <TableCell>Hospital/Clinic</TableCell>
+                                        <TableCell>Status</TableCell>
+                                        <TableCell>Created</TableCell>
+                                        <TableCell>Actions</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {users.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                                                 <Typography variant="body2" color="text.secondary">
-                                                    {user.email}
+                                                    No users found
                                                 </Typography>
-                                            </Box>
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Chip
-                                            label={user.role.replace('_', ' ').toUpperCase()}
-                                            color={getRoleColor(user.role) as any}
-                                            size="small"
-                                        />
-                                    </TableCell>
-                                    <TableCell>{user.hospital}</TableCell>
-                                    <TableCell>
-                                        <Chip
-                                            label={user.status}
-                                            color={getStatusColor(user.status) as any}
-                                            size="small"
-                                        />
-                                    </TableCell>
-                                    <TableCell>{user.lastLogin}</TableCell>
-                                    <TableCell>{user.createdAt}</TableCell>
-                                    <TableCell>
-                                        <IconButton
-                                            onClick={(e) => handleMenuOpen(e, user)}
-                                            size="small"
-                                        >
-                                            <MoreVertIcon />
-                                        </IconButton>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                                            </TableCell>
+                                        </TableRow>
+                                    ) : (
+                                        users.map((user) => (
+                                            <TableRow key={user._id}>
+                                                <TableCell>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                        <Avatar sx={{ mr: 2, bgcolor: 'primary.main' }}>
+                                                            {getRoleIcon(user.role)}
+                                                        </Avatar>
+                                                        <Box>
+                                                            <Typography variant="subtitle2">
+                                                                {user.firstName} {user.lastName}
+                                                            </Typography>
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                {user.email}
+                                                            </Typography>
+                                                        </Box>
+                                                    </Box>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Chip
+                                                        label={user.role?.replace('_', ' ').toUpperCase() || 'N/A'}
+                                                        color={getRoleColor(user.role) as any}
+                                                        size="small"
+                                                    />
+                                                </TableCell>
+                                                <TableCell>
+                                                    {user.hospitalId?.name || user.clinicId?.name || 'N/A'}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Chip
+                                                        label={getStatusLabel(user)}
+                                                        color={getStatusColor(user) as any}
+                                                        size="small"
+                                                    />
+                                                </TableCell>
+                                                <TableCell>
+                                                    {formatDateTime(user.createdAt)}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <IconButton
+                                                        onClick={(e) => handleMenuOpen(e, user)}
+                                                        size="small"
+                                                        disabled={toggleLoading === user._id || deleteLoading === user._id}
+                                                    >
+                                                        {toggleLoading === user._id || deleteLoading === user._id ? (
+                                                            <CircularProgress size={20} />
+                                                        ) : (
+                                                            <MoreVertIcon />
+                                                        )}
+                                                    </IconButton>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                        {/* Pagination */}
+                        {pagination.pages > 1 && (
+                            <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                                <Pagination
+                                    count={pagination.pages}
+                                    page={pagination.current}
+                                    onChange={handlePageChange}
+                                    color="primary"
+                                    showFirstButton
+                                    showLastButton
+                                />
+                            </Box>
+                        )}
+                    </>
+                )}
             </Card>
 
             {/* Action Menu */}
@@ -383,15 +583,21 @@ const UsersPage: React.FC = () => {
                     </ListItemIcon>
                     <ListItemText>Edit User</ListItemText>
                 </MenuItem>
-                <MenuItem onClick={() => handleToggleStatus(selectedUser?.id)}>
+                <MenuItem
+                    onClick={() => selectedUser && handleToggleStatus(selectedUser._id)}
+                    disabled={selectedUser?.role === 'super_admin' || toggleLoading === selectedUser?._id}
+                >
                     <ListItemIcon>
                         <MoreVertIcon fontSize="small" />
                     </ListItemIcon>
                     <ListItemText>
-                        {selectedUser?.status === 'Active' ? 'Deactivate' : 'Activate'}
+                        {selectedUser?.isActive ? 'Deactivate' : 'Activate'}
                     </ListItemText>
                 </MenuItem>
-                <MenuItem onClick={() => handleDeleteUser(selectedUser?.id)}>
+                <MenuItem
+                    onClick={() => selectedUser && handleDeleteUser(selectedUser._id)}
+                    disabled={selectedUser?.role === 'super_admin' || deleteLoading === selectedUser?._id}
+                >
                     <ListItemIcon>
                         <DeleteIcon fontSize="small" />
                     </ListItemIcon>

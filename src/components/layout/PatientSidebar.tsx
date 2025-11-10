@@ -18,15 +18,7 @@ import {
     Assignment as AssignmentIcon,
     Assessment as AssessmentIcon,
     Person as PersonIcon,
-    Description as DescriptionIcon,
-    Notifications as NotificationsIcon,
-    Settings as SettingsIcon,
     LocalHospital as HospitalIcon,
-    CalendarToday as CalendarIcon,
-    History as HistoryIcon,
-    Favorite as FavoriteIcon,
-    HealthAndSafety as HealthIcon,
-    TrendingUp as TrendingUpIcon,
     BookOnline as BookIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -74,18 +66,7 @@ const PatientSidebar: React.FC<PatientSidebarProps> = ({ open, onClose, variant 
             icon: <AssignmentIcon />,
             description: 'Track referrals',
         },
-        {
-            title: 'Prescriptions',
-            path: '/dashboard/prescriptions',
-            icon: <DescriptionIcon />,
-            description: 'My prescriptions',
-        },
-        {
-            title: 'Health Summary',
-            path: '/dashboard/health-summary',
-            icon: <HealthIcon />,
-            description: 'Health metrics & trends',
-        },
+
         {
             title: 'My Doctors',
             path: '/dashboard/doctors',
@@ -98,24 +79,7 @@ const PatientSidebar: React.FC<PatientSidebarProps> = ({ open, onClose, variant 
             icon: <HospitalIcon />,
             description: 'Find hospitals',
         },
-        {
-            title: 'History',
-            path: '/dashboard/history',
-            icon: <HistoryIcon />,
-            description: 'Medical history',
-        },
-        {
-            title: 'Favorites',
-            path: '/dashboard/favorites',
-            icon: <FavoriteIcon />,
-            description: 'Saved doctors & hospitals',
-        },
-        {
-            title: 'Settings',
-            path: '/dashboard/settings',
-            icon: <SettingsIcon />,
-            description: 'Profile settings',
-        },
+
         {
             title: 'Profile',
             path: '/dashboard/profile',

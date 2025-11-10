@@ -283,7 +283,7 @@ const AboutPage: React.FC = () => {
             </Box>
 
             {/* Team Section */}
-            <Container maxWidth="lg" sx={{ py: 12 }}>
+            {/* <Container maxWidth="lg" sx={{ py: 12 }}>
                 <Box sx={{ textAlign: 'center', mb: 8 }}>
                     <Typography variant="h2" component="h2" gutterBottom sx={{ mb: 3 }}>
                         Our Team
@@ -342,7 +342,7 @@ const AboutPage: React.FC = () => {
                         </Grid>
                     ))}
                 </Grid>
-            </Container>
+            </Container> */}
 
             {/* Timeline Section */}
             <Box sx={{ bgcolor: 'grey.50', py: 12 }}>

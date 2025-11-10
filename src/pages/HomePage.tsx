@@ -420,7 +420,7 @@ const HomePage: React.FC = () => {
             </Box>
 
             {/* Testimonials Section */}
-            <Container maxWidth="lg" sx={{ py: 12 }}>
+            {/* <Container maxWidth="lg" sx={{ py: 12 }}>
                 <Box sx={{ textAlign: 'center', mb: 8 }}>
                     <Typography variant="h2" component="h2" gutterBottom sx={{ mb: 3 }}>
                         What Our Users Say
@@ -458,7 +458,7 @@ const HomePage: React.FC = () => {
                         </Grid>
                     ))}
                 </Grid>
-            </Container>
+            </Container> */}
 
             {/* CTA Section */}
             <Box

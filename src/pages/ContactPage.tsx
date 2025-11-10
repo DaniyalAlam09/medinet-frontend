@@ -385,7 +385,7 @@ const ContactPage: React.FC = () => {
             </Container>
 
             {/* CTA Section */}
-            <Box
+            {/* <Box
                 sx={{
                     background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
                     color: 'white',
@@ -439,7 +439,7 @@ const ContactPage: React.FC = () => {
                         </Button>
                     </Stack>
                 </Container>
-            </Box>
+            </Box> */}
         </Box>
     );
 };

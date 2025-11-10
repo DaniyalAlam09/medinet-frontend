@@ -16,18 +16,10 @@ import {
     Dashboard as DashboardIcon,
     People as PeopleIcon,
     Assignment as AssignmentIcon,
-    Assessment as AssessmentIcon,
     Schedule as ScheduleIcon,
     MedicalServices as MedicalServicesIcon,
-    PersonAdd as PersonAddIcon,
     Description as DescriptionIcon,
-    Analytics as AnalyticsIcon,
-    Notifications as NotificationsIcon,
     Settings as SettingsIcon,
-    LocalHospital as HospitalIcon,
-    TrendingUp as TrendingUpIcon,
-    CalendarToday as CalendarIcon,
-    History as HistoryIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
@@ -69,52 +61,10 @@ const DoctorSidebar: React.FC<DoctorSidebarProps> = ({ open, onClose, variant = 
             description: 'Create & track referrals',
         },
         {
-            title: 'Medical Records',
-            path: '/dashboard/records',
-            icon: <AssessmentIcon />,
-            description: 'Patient records',
-        },
-        {
-            title: 'Add Patient',
-            path: '/dashboard/add-patient',
-            icon: <PersonAddIcon />,
-            description: 'Register new patient',
-        },
-        {
-            title: 'Prescriptions',
-            path: '/dashboard/prescriptions',
-            icon: <MedicalServicesIcon />,
-            description: 'Manage prescriptions',
-        },
-        {
             title: 'Reports',
             path: '/dashboard/reports',
             icon: <DescriptionIcon />,
             description: 'Medical reports',
-        },
-        {
-            title: 'Analytics',
-            path: '/dashboard/analytics',
-            icon: <AnalyticsIcon />,
-            description: 'Performance metrics',
-        },
-        {
-            title: 'Schedule',
-            path: '/dashboard/schedule',
-            icon: <CalendarIcon />,
-            description: 'My schedule',
-        },
-        {
-            title: 'History',
-            path: '/dashboard/history',
-            icon: <HistoryIcon />,
-            description: 'Activity history',
-        },
-        {
-            title: 'Settings',
-            path: '/dashboard/settings',
-            icon: <SettingsIcon />,
-            description: 'Profile settings',
         },
         {
             title: 'Profile',
